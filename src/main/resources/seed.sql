@@ -1,10 +1,10 @@
--- password for all seed accounts is: Password123!  (bcrypt hash below)
+-- password for all seed accounts is: Password123!
 INSERT INTO users (name, email, password_hash, role)
-SELECT 'Admin', 'admin@zeemart.local', '$2a$12$8HqjK5r7c1s0m0K5m1z1Y.z8mE0m0m9t9r7t2wYQ1kzq0v9r0f4Sa', 'ADMIN'
+SELECT 'Admin', 'admin@zeemart.local', '$2a$10$IY0AOO6o.w9z4IIHmM6R3u8RU0Lzm.9V8oIHW8.STqyj6K8JxDq', 'ADMIN'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='admin@zeemart.local');
 
 INSERT INTO users (name, email, password_hash, role)
-SELECT 'Seller One', 'seller1@zeemart.local', '$2a$12$8HqjK5r7c1s0m0K5m1z1Y.z8mE0m0m9t9r7t2wYQ1kzq0v9r0f4Sa', 'SELLER'
+SELECT 'Seller One', 'seller1@zeemart.local', '$2a$10$IY0AOO6o.w9z4IIHmM6R3u8RU0Lzm.9V8oIHW8.STqyj6K8JxDq', 'SELLER'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='seller1@zeemart.local');
 
 INSERT INTO products (seller_id, name, description, price, stock_qty, category, image_url)
