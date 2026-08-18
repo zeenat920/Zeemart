@@ -44,3 +44,5 @@ async function checkout() {
   const res = await fetch(`${API}/orders`, { method: 'POST', credentials: 'include' });
   return res.json();
 }
+
+//tstnh
