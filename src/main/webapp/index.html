@@ -1,13 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ZeeMart</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZeeMart</title>
+<style>
+:root{--ink:#14213d;--paper:#f4f5f8;--card:#fff;--line:#dcdfe8;--gold:#f0a500;--teal:#0b6e6e;--red:#b42318;--muted:#5b6478}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5}
+header{background:var(--ink);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 24px}
+.brand{font-size:1.6rem;font-weight:700;color:var(--gold);letter-spacing:.02em}
+#session{display:flex;align-items:center;gap:12px}
+main{display:grid;grid-template-columns:1fr 320px;gap:24px;max-width:1100px;margin:24px auto;padding:0 16px}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+h2{margin:0 0 12px;font-size:1.25rem}
+h3{margin:8px 0 0;font-size:1.05rem}
+button{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:8px 14px;font:inherit;cursor:pointer}
+button.primary{background:var(--gold);color:var(--ink);font-weight:600;width:100%;padding:10px}
+button.ghost{background:transparent;border:1px solid #fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input,select{padding:8px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff;color:var(--ink)}
+label{display:block;font-size:.9rem;color:var(--muted);margin-top:8px}
+label input,label select{display:block;width:100%;margin-top:2px}
+#note{grid-column:1/-1;margin:0;padding:10px 14px;border-left:4px solid;background:#fff}
+#note:empty{display:none}
+#note.ok{border-color:var(--teal);background:#e6f4f1}
+#note.err{border-color:var(--red);background:#fdecea}
+#auth{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
+@media(max-width:600px){#auth{grid-template-columns:1fr}}
+#auth form{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+#auth button{margin-top:12px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.toolbar input{flex:1;min-width:160px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column}
+.tile{height:72px;border-radius:6px;background:var(--ink);color:var(--gold);font-size:2rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.card p{margin:4px 0}
+.cat{color:var(--teal);font-size:.9rem}
+.desc{color:var(--muted);font-size:.9rem;flex:1}
+.price{font-weight:700;font-size:1.15rem}
+.stock{font-size:.85rem;color:var(--muted)}
+.buy{display:flex;gap:8px;margin-top:8px}
+.buy input{width:64px}
+.buy button{flex:1}
+aside{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;align-self:start;position:sticky;top:16px}
+.line{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.total{font-weight:700;font-size:1.15rem;margin:12px 0}
+.empty{color:var(--muted)}
+details{max-width:1100px;margin:0 auto 32px;padding:0 16px;color:var(--muted)}
+pre{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;font-size:.8rem}
+</style>
 </head>
 <body>
-  <h1>ZeeMart</h1>
-  <p>Static test page. Open the browser console and use app.js functions,
-     or wire up real forms as you build the UI.</p>
-  <script src="app.js"></script>
+<header>
+  <div class="brand">ZeeMart</div>
+  <div id="session"></div>
+</header>
+
+<main>
+  <p id="note" role="status"></p>
+
+  <div>
+    <section id="auth">
+      <form id="loginForm">
+        <h2>Log in</h2>
+        <label>Email<input id="loginEmail" type="email" required autocomplete="email"></label>
+        <label>Password<input id="loginPassword" type="password" required autocomplete="current-password"></label>
+        <button type="submit">Log in</button>
+      </form>
+      <form id="regForm">
+        <h2>Create an account</h2>
+        <label>Name<input id="regName" type="text" required autocomplete="name"></label>
+        <label>Email<input id="regEmail" type="email" required autocomplete="email"></label>
+        <label>Password<input id="regPassword" type="password" required minlength="6" autocomplete="new-password"></label>
+        <label>I want to
+          <select id="regRole">
+            <option value="BUYER">Buy products</option>
+            <option value="SELLER">Sell products</option>
+          </select>
+        </label>
+        <button type="submit">Create account</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Products</h2>
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Search by name or keyword" aria-label="Search products">
+        <select id="cat" aria-label="Category"><option value="">All categories</option></select>
+        <button id="searchBtn" type="button">Search</button>
+      </div>
+      <div id="products" class="grid"></div>
+    </section>
+  </div>
+
+  <aside>
+    <h2>Your cart</h2>
+    <div id="cartBody"></div>
+    <p id="cartTotal" class="total"></p>
+    <button id="checkout" class="primary" disabled>Place order</button>
+  </aside>
+</main>
+
+<details>
+  <summary>Last server response (for debugging)</summary>
+  <pre id="debug">Nothing yet.</pre>
+</details>
+
+<script>
+(function () {
+  const API = '/zeemart/api/v1';
+  const $ = id => document.getElementById(id);
+  const money = v => '\u20B9' + (Number(v) || 0).toFixed(2);
+  let user = null;
+  const cats = new Set();
+
+  // Build DOM nodes with textContent only, so user-supplied text is always escaped.
+  function h(tag, attrs, ...kids) {
+    const e = document.createElement(tag);
+    for (const k in (attrs || {})) {
+      if (k === 'class') e.className = attrs[k];
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+      else e.setAttribute(k, attrs[k]);
+    }
+    kids.flat().forEach(c => e.append(c instanceof Node ? c : document.createTextNode(c == null ? '' : c)));
+    return e;
+  }
+
+  async function api(path, opts = {}) {
+    const o = { credentials: 'include', ...opts };
+    if (o.body && typeof o.body !== 'string') {
+      o.headers = { 'Content-Type': 'application/json', ...(o.headers || {}) };
+      o.body = JSON.stringify(o.body);
+    }
+    let json;
+    try {
+      const res = await fetch(API + path, o);
+      const text = await res.text();
+      try { json = JSON.parse(text); }
+      catch (e) { json = { success: false, error: { message: 'Server returned status ' + res.status } }; }
+      json._status = res.status;
+    } catch (e) {
+      json = { success: false, error: { message: 'Cannot reach the server. Is it running?' } };
+    }
+    $('debug').textContent = (opts.method || 'GET') + ' ' + path + '\n' + JSON.stringify(json, null, 2);
+    return json;
+  }
+
+  function say(text, ok) {
+    const n = $('note');
+    n.textContent = text;
+    n.className = ok ? 'ok' : 'err';
+  }
+
+  function errText(r) {
+    const e = r && r.error;
+    if (!e) return 'Something went wrong. Try again.';
+    let t = e.message || e.code || 'Something went wrong. Try again.';
+    if (e.fields) t += ' ' + JSON.stringify(e.fields);
+    return t;
+  }
+
+  function renderSession() {
+    const s = $('session');
+    s.replaceChildren();
+    if (user) {
+      const who = user.name || user.email || 'your account';
+      s.append(h('span', {}, 'Signed in as ' + who + (user.role ? ' (' + user.role + ')' : '')),
+               h('button', { class: 'ghost', onclick: logout }, 'Log out'));
+    }
+    $('auth').hidden = !!user;
+  }
+
+  async function logout() {
+    const r = await api('/auth/logout', { method: 'POST' });
+    if (r.success) {
+      user = null;
+      renderSession();
+      loadCart();
+      say('You are logged out.', true);
+    } else {
+      say(errText(r), false);
+    }
+  }
+
+  $('regForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const r = await api('/auth/register', {
+      method: 'POST',
+      body: {
+        name: $('regName').value.trim(),
+        email: $('regEmail').value.trim(),
+        password: $('regPassword').value,
+        role: $('regRole').value
+      }
+    });
+    if (r.success) say('Account created. Log in with your email and password.', true);
+    else say(errText(r), false);
+  });
+
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const r = await api('/auth/login', {
+      method: 'POST',
+      body: { email: $('loginEmail').value.trim(), password: $('loginPassword').value }
+    });
+    if (r.success) {
+      user = r.data || {};
+      say('You are logged in.', true);
+      renderSession();
+      loadCart();
+    } else {
+      say(errText(r), false);
+    }
+  });
+
+  function fillCats() {
+    const s = $('cat'), cur = s.value;
+    s.replaceChildren(h('option', { value: '' }, 'All categories'));
+    [...cats].sort().forEach(c => s.append(h('option', { value: c }, c)));
+    s.value = cur;
+  }
+
+  function card(item) {
+    const inStock = item.stockQty > 0;
+    const qty = h('input', { type: 'number', min: '1', max: String(item.stockQty || 1), value: '1', 'aria-label': 'Quantity of ' + item.name });
+    const add = h('button', {
+      onclick: async () => {
+        const n = parseInt(qty.value, 10);
+        if (!(n >= 1)) { say('Enter a quantity of 1 or more.', false); return; }
+        const r = await api('/cart', { method: 'POST', body: { productId: item.id, quantity: n } });
+        if (r.success) { say(item.name + ' added to your cart.', true); loadCart(); }
+        else say(r._status === 401 ? 'Log in first, then add items to your cart.' : errText(r), false);
+      }
+    }, 'Add to cart');
+    if (!inStock) { add.disabled = true; qty.disabled = true; }
+    return h('article', { class: 'card' },
+      h('div', { class: 'tile' }, (item.name || '?').charAt(0)),
+      h('h3', {}, item.name),
+      h('p', { class: 'cat' }, item.category || 'Uncategorised'),
+      h('p', { class: 'desc' }, item.description || ''),
+      h('p', { class: 'price' }, money(item.price)),
+      h('p', { class: 'stock' }, inStock ? item.stockQty + ' in stock' : 'Out of stock'),
+      h('div', { class: 'buy' }, qty, add));
+  }
+
+  async function loadProducts() {
+    const q = $('q').value.trim(), c = $('cat').value;
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (c) params.set('category', c);
+    const r = await api('/products' + (params.toString() ? '?' + params : ''));
+    const box = $('products');
+    box.replaceChildren();
+    if (!r.success) { box.append(h('p', { class: 'empty' }, errText(r))); return; }
+    const list = Array.isArray(r.data) ? r.data : [];
+    if (!q && !c) { list.forEach(x => x.category && cats.add(x.category)); fillCats(); }
+    if (!list.length) {
+      box.append(h('p', { class: 'empty' }, 'No products match. Try a different word or category.'));
+      return;
+    }
+    list.forEach(x => box.append(card(x)));
+  }
+
+  async function loadCart() {
+    const box = $('cartBody'), tot = $('cartTotal'), btn = $('checkout');
+    box.replaceChildren();
+    tot.textContent = '';
+    btn.disabled = true;
+    const r = await api('/cart');
+    if (!r.success) {
+      box.append(h('p', { class: 'empty' }, r._status === 401 ? 'Log in to see your cart.' : errText(r)));
+      return;
+    }
+    const d = r.data;
+    const items = Array.isArray(d) ? d : (d && d.items) || [];
+    if (!items.length) {
+      box.append(h('p', { class: 'empty' }, 'Your cart is empty. Add something from the list.'));
+      return;
+    }
+    let sum = 0;
+    items.forEach(it => {
+      const price = Number(it.unitPrice ?? it.price ?? 0);
+      const q = Number(it.quantity ?? 1);
+      const line = Number(it.lineTotal ?? it.subtotal ?? price * q);
+      sum += line;
+      box.append(h('div', { class: 'line' },
+        h('span', {}, (it.productName || it.name || 'Product ' + it.productId) + ' \u00D7 ' + q),
+        h('span', {}, money(line))));
+    });
+    let total = sum;
+    if (d && !Array.isArray(d)) {
+      const t = d.total ?? d.totalAmount;
+      if (t != null) total = t;
+    }
+    tot.textContent = 'Total ' + money(total);
+    btn.disabled = false;
+  }
+
+  $('checkout').addEventListener('click', async () => {
+    const r = await api('/orders', { method: 'POST' });
+    if (r.success) {
+      const d = r.data || {};
+      const id = d.id || d.orderId;
+      say('Order placed' + (id ? ' (order #' + id + ')' : '') + '.', true);
+      loadCart();
+      loadProducts();
+    } else {
+      say(errText(r), false);
+    }
+  });
+
+  $('searchBtn').addEventListener('click', loadProducts);
+  $('q').addEventListener('keydown', e => { if (e.key === 'Enter') loadProducts(); });
+  $('cat').addEventListener('change', loadProducts);
+
+  renderSession();
+  loadProducts();
+  loadCart();
+})();
+</script>
 </body>
 </html>
