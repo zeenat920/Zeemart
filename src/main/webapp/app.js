@@ -45,6 +45,3 @@ async function checkout() {
   return res.json();
 }
 
-//tstnh
-
-//testing
