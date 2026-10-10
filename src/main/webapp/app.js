@@ -1,4 +1,4 @@
-const API = '/zeemart/api/v1';
+  const API = '/api/v1';
 
 async function register(name, email, password, role) {
   const res = await fetch(`${API}/auth/register`, {
